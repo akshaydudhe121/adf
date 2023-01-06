@@ -41,9 +41,6 @@
 			],
 			"transformations": [
 				{
-					"name": "FilterEuropOnly"
-				},
-				{
 					"name": "SelectOnlyRequiredFields"
 				},
 				{
@@ -54,6 +51,9 @@
 				},
 				{
 					"name": "SelectForSink"
+				},
+				{
+					"name": "filter1"
 				}
 			],
 			"scriptLines": [
@@ -95,8 +95,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> source1",
-				"source1 filter(continent == 'Europe' && not(isNull(country_code))) ~> FilterEuropOnly",
-				"FilterEuropOnly select(mapColumn(",
+				"filter1 select(mapColumn(",
 				"          country,",
 				"          country_code,",
 				"          population,",
@@ -133,6 +132,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelectForSink",
+				"CasesAndDeathsSource filter(continent == 'Europe' && not(isNull(country_code))) ~> filter1",
 				"SelectForSink sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     truncate: true,",
