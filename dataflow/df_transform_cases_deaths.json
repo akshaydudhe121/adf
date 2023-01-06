@@ -74,7 +74,7 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> CountyLookup",
-				"CasesAndDeathsSource filter(country == 'Afghanistan') ~> FilterEuropOnly",
+				"CasesAndDeathsSource filter(continent == 'Europe' && not(isNull(country_code))) ~> FilterEuropOnly",
 				"FilterEuropOnly select(mapColumn(",
 				"          country,",
 				"          country_code,",
