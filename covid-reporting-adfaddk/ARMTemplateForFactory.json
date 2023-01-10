@@ -47,12 +47,18 @@
 			"properties": {
 				"activities": [
 					{
-						"name": "Wait1",
-						"type": "Wait",
+						"name": "Validation1",
+						"type": "Validation",
 						"dependsOn": [],
 						"userProperties": [],
 						"typeProperties": {
-							"waitTimeInSeconds": 1
+							"dataset": {
+								"referenceName": "ds_raw_cases_and_deaths",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"timeout": "0.12:00:00",
+							"sleep": 10
 						}
 					}
 				],
@@ -62,7 +68,9 @@
 				},
 				"annotations": []
 			},
-			"dependsOn": []
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_raw_cases_and_deaths')]"
+			]
 		},
 		{
 			"name": "[concat(parameters('factoryName'), '/pl_demo')]",
@@ -1495,7 +1503,7 @@
 				"typeProperties": {
 					"location": {
 						"type": "AzureBlobFSLocation",
-						"fileName": "cases_deaths.csv",
+						"fileName": "case_deaths_uk_ind_only.csv",
 						"folderPath": "ecdc",
 						"fileSystem": "raw"
 					},
@@ -1834,7 +1842,7 @@
 				"annotations": [],
 				"type": "AzureDatabricks",
 				"typeProperties": {
-					"domain": "https://adb-7681549768739825.5.azuredatabricks.net",
+					"domain": "https://adb-412271490819082.2.azuredatabricks.net",
 					"accessToken": {
 						"type": "SecureString",
 						"value": "[parameters('ls_db_covid_cluster_accessToken')]"
@@ -1844,7 +1852,7 @@
 					"newClusterSparkEnvVars": {
 						"PYSPARK_PYTHON": "/databricks/python3/bin/python3"
 					},
-					"newClusterVersion": "7.3.x-scala2.12",
+					"newClusterVersion": "10.4.x-scala2.12",
 					"newClusterInitScripts": [],
 					"clusterOption": "Fixed"
 				}
@@ -2139,13 +2147,14 @@
 								"referenceName": "ds_processed_cases_and_deaths",
 								"type": "DatasetReference"
 							},
-							"name": "CasesAndDeathsSink"
+							"name": "CasesAndDeathsSink",
+							"rejectedDataLinkedService": {
+								"referenceName": "ls_adls_covidreportingdl",
+								"type": "LinkedServiceReference"
+							}
 						}
 					],
 					"transformations": [
-						{
-							"name": "FilterEuropOnly"
-						},
 						{
 							"name": "SelectOnlyRequiredFields"
 						},
@@ -2157,6 +2166,9 @@
 						},
 						{
 							"name": "SelectForSink"
+						},
+						{
+							"name": "filter1"
 						}
 					],
 					"scriptLines": [
@@ -2184,8 +2196,7 @@
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false) ~> CountyLookup",
-						"CasesAndDeathsSource filter(continent == 'Europe' && not(isNull(country_code))) ~> FilterEuropOnly",
-						"FilterEuropOnly select(mapColumn(",
+						"filter1 select(mapColumn(",
 						"          country,",
 						"          country_code,",
 						"          population,",
@@ -2222,23 +2233,23 @@
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true) ~> SelectForSink",
+						"CasesAndDeathsSource filter(continent == 'Europe') ~> filter1",
 						"SelectForSink sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     partitionFileNames:['cases_and_deaths.csv'],",
 						"     truncate: true,",
 						"     umask: 0022,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true,",
-						"     partitionBy('hash', 1)) ~> CasesAndDeathsSink"
+						"     skipDuplicateMapOutputs: true) ~> CasesAndDeathsSink"
 					]
 				}
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/ds_raw_cases_and_deaths')]",
 				"[concat(variables('factoryId'), '/datasets/ds_country_lookup')]",
-				"[concat(variables('factoryId'), '/datasets/ds_processed_cases_and_deaths')]"
+				"[concat(variables('factoryId'), '/datasets/ds_processed_cases_and_deaths')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_covidreportingdl')]"
 			]
 		},
 		{
