@@ -1575,6 +1575,61 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pl_execute_population_data')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Execute Ingest population pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_ingest_population_data",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					},
+					{
+						"name": "Execute Process population Pipeline",
+						"type": "ExecutePipeline",
+						"dependsOn": [
+							{
+								"activity": "Execute Ingest population pipeline",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"pipeline": {
+								"referenceName": "pl_process_population_data",
+								"type": "PipelineReference"
+							},
+							"waitOnCompletion": true,
+							"parameters": {}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "Execute"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_ingest_population_data')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/tr_population_data_arrived')]",
 			"type": "Microsoft.DataFactory/factories/triggers",
 			"apiVersion": "2018-06-01",
@@ -1584,7 +1639,7 @@
 				"pipelines": [
 					{
 						"pipelineReference": {
-							"referenceName": "pl_ingest_population_data",
+							"referenceName": "pl_execute_population_data",
 							"type": "PipelineReference"
 						},
 						"parameters": {}
@@ -1601,7 +1656,7 @@
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_ingest_population_data')]"
+				"[concat(variables('factoryId'), '/pipelines/pl_execute_population_data')]"
 			]
 		},
 		{
@@ -1684,47 +1739,6 @@
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/pipelines/pl_processed_hospital_admissions')]",
 				"[concat(variables('factoryId'), '/triggers/tr_ingest_ecdc_data')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/tr_sqlize_cases_and_deaths_data')]",
-			"type": "Microsoft.DataFactory/factories/triggers",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"annotations": [],
-				"runtimeState": "Started",
-				"pipeline": {
-					"pipelineReference": {
-						"referenceName": "pl_sqlize_cases_and_deaths_data",
-						"type": "PipelineReference"
-					},
-					"parameters": {}
-				},
-				"type": "TumblingWindowTrigger",
-				"typeProperties": {
-					"frequency": "Hour",
-					"interval": 24,
-					"startTime": "2022-07-20T06:12:00Z",
-					"endTime": "2022-07-21T00:00:00Z",
-					"delay": "00:00:00",
-					"maxConcurrency": 50,
-					"retryPolicy": {
-						"intervalInSeconds": 30
-					},
-					"dependsOn": [
-						{
-							"type": "TumblingWindowTriggerDependencyReference",
-							"referenceTrigger": {
-								"referenceName": "tr_process_cases_and_deaths_data",
-								"type": "TriggerReference"
-							}
-						}
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/pipelines/pl_sqlize_cases_and_deaths_data')]",
-				"[concat(variables('factoryId'), '/triggers/tr_process_cases_and_deaths_data')]"
 			]
 		}
 	]
