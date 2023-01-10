@@ -17,13 +17,6 @@
 						"type": "DatasetReference"
 					},
 					"name": "CountyLookup"
-				},
-				{
-					"dataset": {
-						"referenceName": "ds_raw_cases_and_deaths",
-						"type": "DatasetReference"
-					},
-					"name": "source1"
 				}
 			],
 			"sinks": [
@@ -81,20 +74,6 @@
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> CountyLookup",
-				"source(output(",
-				"          country as string,",
-				"          country_code as string,",
-				"          continent as string,",
-				"          population as string,",
-				"          indicator as string,",
-				"          daily_count as string,",
-				"          date as string,",
-				"          rate_14_day as string,",
-				"          source as string",
-				"     ),",
-				"     allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source1",
 				"filter1 select(mapColumn(",
 				"          country,",
 				"          country_code,",
@@ -132,7 +111,7 @@
 				"     ),",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true) ~> SelectForSink",
-				"CasesAndDeathsSource filter(continent == 'Europe' && not(isNull(country_code))) ~> filter1",
+				"CasesAndDeathsSource filter(continent == 'Europe') ~> filter1",
 				"SelectForSink sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     truncate: true,",
